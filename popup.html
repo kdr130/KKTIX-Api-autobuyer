@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Token Request and Fetch</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 400px;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 18px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+    }
+    textarea {
+      height: 100px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Token Request and Fetch</h1>
+  <form id="postForm">
+    <label for="url">POST URL:</label>
+    <input type="text" id="url" required placeholder="https://example.com/api">
+    
+    <label for="data">POST Data (JSON):</label>
+    <textarea id="data" required placeholder='{"key": "value"}'></textarea>
+    
+    <button type="submit">Send Request and Fetch Data</button>
+  </form>
+  <div id="result"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
