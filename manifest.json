@@ -4,18 +4,25 @@
     "version": "1.0",
     "description": "A simple extension to make POST requests with current page cookies",
     "permissions": [
-      "activeTab",
-      "http://*/*",
-      "https://*/*",
-      "cookies"
+        "activeTab",
+        "http://*/*",
+        "https://*/*",
+        "cookies"
     ],
     "browser_action": {
-      "default_popup": "popup.html"
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
     },
     "content_scripts": [
-      {
-        "matches": ["<all_urls>"],
-        "js": ["content.js"]
-      }
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
     ]
-  }
+}
