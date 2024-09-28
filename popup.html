@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Token Request and Fetch</title>
   <style>
@@ -8,22 +9,28 @@
       width: 400px;
       padding: 10px;
     }
+
     h1 {
       font-size: 18px;
       color: #333;
     }
+
     label {
       display: block;
       margin-top: 10px;
     }
-    input[type="text"], textarea {
+
+    input[type="text"],
+    textarea {
       width: 100%;
       padding: 5px;
       margin-top: 5px;
     }
+
     textarea {
       height: 100px;
     }
+
     button {
       margin-top: 10px;
       padding: 5px 10px;
@@ -32,9 +39,11 @@
       border: none;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #45a049;
     }
+
     #result {
       margin-top: 10px;
       padding: 10px;
@@ -47,18 +56,18 @@
     }
   </style>
 </head>
+
 <body>
   <h1>Token Request and Fetch</h1>
   <form id="postForm">
-    <label for="url">POST URL:</label>
-    <input type="text" id="url" required placeholder="https://example.com/api" value = "https://queue.kktix.com/queue/plwrf?authenticity_token=m2t4QQmdlCUA2NDq86Oiz3sa6%2FG2Jedk7B8Zsq6aLDq7xChTvu0%2BeOzCTzPK0S46Qs4pcc%2FSdMHFCgDNhHqJdQ%3D%3D">
-    
     <label for="data">POST Data (JSON):</label>
-    <textarea id="data" required placeholder='{"key": "value"}'>{"tickets":[{"id":780038,"quantity":1,"invitationCodes":[],"member_code":"","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"agreeTerm":true}</textarea>
-    
+    <textarea id="data" required
+      placeholder='{"key": "value"}'>{"tickets":[{"id":776872,"quantity":1,"invitationCodes":[],"member_code":"","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"agreeTerm":true}</textarea>
+
     <button type="submit">Send Request and Fetch Data</button>
   </form>
   <div id="result"></div>
   <script src="popup.js"></script>
 </body>
+
 </html>
