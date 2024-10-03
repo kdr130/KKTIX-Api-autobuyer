@@ -1,6 +1,6 @@
 
 var csrfToken = ""
-var eventId = ""  
+var eventId = ""
 
 
 function customURLEncode(str) {
@@ -44,12 +44,28 @@ document.getElementById('postForm').addEventListener('submit', function (e) {
 
 var init = (tab) => {
   var tabId = tab.id;
-  chrome.tabs.sendMessage(tabId, { action: "getCsrfToken" }, function (response) {
+  chrome.tabs.sendMessage(tabId, { action: "getContentData" }, function (response) {
     console.log("response: " + JSON.stringify(response))
     console.log("response.csrfToken: " + response.csrfToken)
     csrfToken = response.csrfToken
     eventId = response.eventId
+    questionExists = response.questionExists
+    recaptchaExists = response.recaptchaExists
 
+    console.log("questionExists: " + questionExists)
+    console.log("recaptchaExists: " + recaptchaExists)  
+
+    if (questionExists && recaptchaExists) {
+      document.getElementById('questionType').innerText = '有一般問題' + '\n' + '有 Google 驗證';
+    } else if (questionExists) {
+      document.getElementById('questionType').innerText = '有一般問題';
+    } else if (recaptchaExists) {
+      document.getElementById('questionType').innerText = '有 Google 驗證';
+    }
+
+    if (csrfToken != "") {
+      document.getElementById('questionType').innerText = document.getElementById('questionType').innerText + '\ncsrfToken: ' + csrfToken;
+    }
   })
 }
 

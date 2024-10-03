@@ -2,6 +2,7 @@
 <html>
 
 <head>
+  <meta charset="utf-8">
   <title>Token Request and Fetch</title>
   <style>
     body {
@@ -54,11 +55,24 @@
       max-height: 300px;
       overflow-y: auto;
     }
+
+    #questionType {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
+    }
   </style>
 </head>
 
 <body>
   <h1>Token Request and Fetch</h1>
+  <label>目前資訊</label>
+  <div id="questionType">
+  </div>
   <form id="postForm">
     <label for="data">POST Data (JSON):</label>
     <textarea id="data" required
@@ -66,7 +80,9 @@
 
     <button type="submit">Send Request and Fetch Data</button>
   </form>
-  <div id="result"></div>
+  <div id="result">
+    <label for="result"></label>
+  </div>
   <script src="popup.js"></script>
 </body>
 
