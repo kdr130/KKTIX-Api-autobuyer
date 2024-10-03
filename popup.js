@@ -75,7 +75,7 @@ var init = (tab) => {
     document.getElementById('abortButton').addEventListener('click', abortOperation);
 
     initTicketTable(response.ticketArray)
-    
+
   })
 }
 
@@ -90,7 +90,7 @@ function initTicketTable(ticketArray) {
     console.log(ticketArray)
     for (var i = 0; i < ticketArray.length; i++) {
       var option = document.createElement("option");
-      option.text = ticketArray[i].price + "/" +  ticketArray[i].name
+      option.text = ticketArray[i].price + "/" + ticketArray[i].name
       option.value = ticketArray[i].id
       select.add(option);
     }
@@ -100,10 +100,11 @@ function initTicketTable(ticketArray) {
     select.add(option);
   }
 
-  select.addEventListener("change", function() {
+  select.addEventListener("change", function () {
     console.log("onchangeonchangeonchange")
     var ticketIdElement = document.getElementById("ticket_id")
     ticketIdElement.value = select.value
+    updateJsonData()
   })
 }
 
@@ -125,7 +126,6 @@ chrome.tabs.getSelected(null, init)
 
 
 let backgroundPort;
-
 function connectToBackground() {
   backgroundPort = chrome.runtime.connect({ name: "popup" });
 
@@ -157,3 +157,39 @@ function updateGetStatus(data) {
   // 更新UI以顯示GET請求的狀態
   console.log("updateGetStatus: data: " + JSON.stringify(data))
 }
+
+function addOnChangeListener() {
+  document.getElementById("ticket_count").addEventListener("input", function () {
+    updateJsonData()
+  })
+
+  document.getElementById("member_code").addEventListener("input", function () {
+    updateJsonData()
+  })
+
+  document.getElementById("captcha_answer").addEventListener("input", function () {
+    updateJsonData()
+  })
+
+}
+
+function updateJsonData() {
+  // {"tickets":[{"id":785661,"quantity":1,"invitationCodes":[],"member_code":"#20240605164909367","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"摺痕","agreeTerm":true}
+
+  var ticketFullId = document.getElementById("ticket_id").value
+  var ticketId = ticketFullId.replace("ticket_", "")
+  console.log("ticketId: " + ticketId)
+
+  var ticketCount = document.getElementById("ticket_count").value
+  console.log("ticketCount: " + ticketCount)
+
+  var membetCode = document.getElementById("member_code").value
+  console.log("membetCode: " + membetCode)
+
+  var customCaptcha = document.getElementById("captcha_answer").value
+  console.log("custom_captcha: " + customCaptcha)
+
+  document.getElementById('data').value = '{"tickets":[{"id":' + ticketId + ',"quantity":' + ticketCount + ',"invitationCodes":[],"member_code":"' + membetCode + '","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"' + customCaptcha + '","agreeTerm":true}'
+}
+
+addOnChangeListener()
