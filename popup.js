@@ -16,6 +16,11 @@ function customURLEncode(str) {
 document.getElementById('postForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
+  if (csrfToken == "") {
+    alert("csrfToken 為空 請重整網頁再打開")
+    return
+  }
+
   const url = "https://queue.kktix.com/queue/" + eventId + "?authenticity_token=" + customURLEncode(csrfToken)
   const data = document.getElementById('data').value;
 
@@ -53,7 +58,7 @@ var init = (tab) => {
     recaptchaExists = response.recaptchaExists
 
     console.log("questionExists: " + questionExists)
-    console.log("recaptchaExists: " + recaptchaExists)  
+    console.log("recaptchaExists: " + recaptchaExists)
 
     if (questionExists && recaptchaExists) {
       document.getElementById('questionType').innerText = '有一般問題' + '\n' + '有 Google 驗證';
@@ -73,7 +78,7 @@ var init = (tab) => {
 
 function abortOperation() {
   console.log("abortOperation from popup")
-  chrome.runtime.sendMessage({ action: "abortOperation" }, function(response) {
+  chrome.runtime.sendMessage({ action: "abortOperation" }, function (response) {
     if (response && response.success) {
       console.log("Abort signal sent successfully");
       document.getElementById('result').innerText = 'Abort signal sent successfully'
@@ -86,17 +91,17 @@ function abortOperation() {
 
 
 chrome.tabs.getSelected(null, init)
-  
+
 
 let backgroundPort;
 
 function connectToBackground() {
-  backgroundPort = chrome.runtime.connect({name: "popup"});
-  
-  backgroundPort.onMessage.addListener(function(message) {
+  backgroundPort = chrome.runtime.connect({ name: "popup" });
+
+  backgroundPort.onMessage.addListener(function (message) {
     // 處理來自background的消息
     console.log("Received message from background:", message);
-    
+
     // 根據消息類型更新UI
     if (message.type === "postUpdate") {
       updatePostStatus(message.data);
@@ -118,6 +123,6 @@ function updatePostStatus(log) {
 }
 
 function updateGetStatus(data) {
-    // 更新UI以顯示GET請求的狀態
+  // 更新UI以顯示GET請求的狀態
   console.log("updateGetStatus: data: " + JSON.stringify(data))
 }
