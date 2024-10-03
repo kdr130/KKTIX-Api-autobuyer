@@ -1,4 +1,3 @@
-
 var csrfToken = ""
 var eventId = ""
 
@@ -32,6 +31,7 @@ document.getElementById('postForm').addEventListener('submit', function (e) {
       pageUrl: pageUrl
     }, function (response) {
       console.log("response.getData : " + JSON.stringify(response.getData))
+      console.log("response.error : " + JSON.stringify(response.error))
       if (response.success) {
         document.getElementById('result').innerText = 'POST response: ' + JSON.stringify(response.postData) + '\n\nGET response: ' + JSON.stringify(response.getData);
       } else {
@@ -66,7 +66,58 @@ var init = (tab) => {
     if (csrfToken != "") {
       document.getElementById('questionType').innerText = document.getElementById('questionType').innerText + '\ncsrfToken: ' + csrfToken;
     }
+
+    document.getElementById('abortButton').addEventListener('click', abortOperation);
   })
 }
 
+function abortOperation() {
+  console.log("abortOperation from popup")
+  chrome.runtime.sendMessage({ action: "abortOperation" }, function(response) {
+    if (response && response.success) {
+      console.log("Abort signal sent successfully");
+      document.getElementById('result').innerText = 'Abort signal sent successfully'
+    } else {
+      console.log("Failed to send abort signal");
+      document.getElementById('result').innerText = 'Failed to send abort signal'
+    }
+  });
+}
+
+
 chrome.tabs.getSelected(null, init)
+  
+
+let backgroundPort;
+
+function connectToBackground() {
+  backgroundPort = chrome.runtime.connect({name: "popup"});
+  
+  backgroundPort.onMessage.addListener(function(message) {
+    // 處理來自background的消息
+    console.log("Received message from background:", message);
+    
+    // 根據消息類型更新UI
+    if (message.type === "postUpdate") {
+      updatePostStatus(message.data);
+    } else if (message.type === "getUpdate") {
+      updateGetStatus(message.data);
+    }
+    // ... 處理其他類型的消息 ...
+  });
+}
+
+// 在popup打開時連接到background
+document.addEventListener('DOMContentLoaded', connectToBackground);
+
+// 更新UI的函數
+function updatePostStatus(log) {
+  // 更新UI以顯示POST請求的狀態
+  console.log("updatePostStatus: log: " + log)
+  document.getElementById('result').innerText = log
+}
+
+function updateGetStatus(data) {
+    // 更新UI以顯示GET請求的狀態
+  console.log("updateGetStatus: data: " + JSON.stringify(data))
+}

@@ -39,9 +39,12 @@ function sendMsgToContentScript(request) {
   // console.log('receive', ret);
 }
 
+
 // 監聽來自popup或content script的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("request: " + JSON.stringify(request))
   if (request.action === "performRequests") {
+    shouldAbort = false;
     const { url, data, pageUrl } = request;
 
     if (!pageUrl) {
@@ -65,14 +68,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       const cookieString = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
-      console.log("performRequests : url: " + url + " data: " + data)
+      // console.log("performRequests : url: " + url + " data: " + data)
 
-      function recursivePost(url, data, cookieString) {
+      function recursivePost(url, data, cookieString, attemptCount = 1) {
+        console.log("recursivePost : attemptCount: " + attemptCount)
+
+        if (shouldAbort) {
+          sendResponse({ success: false, error: "Operation aborted, attemptCount: " + attemptCount});
+          return;
+        }
 
         // 執行POST請求
         performPost(url, data, cookieString)
           .then(postData => {
-            console.log("performRequests : postData: " + JSON.stringify(postData))
+            if (shouldAbort) {
+              throw new Error("Operation aborted");
+            }
+            // 在錯誤響應中包含嘗試次數
+            var log = "recursivePost : attemptCount: " + attemptCount + ", postData: " + JSON.stringify(postData)
+            console.log(log)
+
+            sendMessageToPopup({
+              type: "postUpdate",
+              data: log
+            });
+            // sendResponse({ success: false, error: JSON.stringify(postData) + " attemptCount: " + attemptCount });
             if (postData && typeof postData === 'object' && 'token' in postData) {
               const token = postData.token;
               // 執行GET請求
@@ -81,7 +101,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             } else if (postData && typeof postData === 'object' && 'result' in postData && (postData.result === 'event_not_yet_start' || postData.result === 'TICKET_SOLD_OUT')) {
               // Wait for a short time before retrying
               return new Promise(resolve => setTimeout(resolve, 500))
-              .then(() => recursivePost(url, data, cookieString));
+              .then(() => recursivePost(url, data, cookieString, attemptCount + 1));
             } else {
               throw new Error('No token found in the response. ' + JSON.stringify(postData));
             }
@@ -93,6 +113,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 throw new Error('Max retries reached without finding to_param');
               }
 
+              if (shouldAbort) {
+                throw new Error("Operation aborted");
+              }
               const getUrl = `https://queue.kktix.com/queue/token/${token}`;
               return performGet(getUrl, cookieString)
                 .then(newGetData => {
@@ -116,19 +139,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendMsgToContentScript(finalGetData)
               })
               .catch(error => {
-                sendResponse({ success: false, error: error.toString() });
+                sendResponse({ success: false, error: error.toString() + " attemptCount: " + attemptCount });
               });
           })
           .catch(error => {
-            sendResponse({ success: false, error: error.toString() });
+            sendResponse({ success: false, error: error.toString() + " attemptCount: " + attemptCount });
           });
       }
 
-      recursivePost(url, data, cookieString)
+      // 初始調用時使用默認的嘗試次數 1
+      recursivePost(url, data, cookieString);
 
     });
 
     // 表示我們將異步發送回應
     return true;
+  } else if (request.action === "abortOperation") {
+    console.log("abortOperation")
+    shouldAbort = true;
+    sendResponse({ success: true, message: "Abort signal received" });
   }
 });
+
+let popupPort;
+
+chrome.runtime.onConnect.addListener(function(port) {
+  if (port.name === "popup") {
+    popupPort = port;
+    port.onDisconnect.addListener(function() {
+      popupPort = null;
+    });
+  }
+});
+
+// 用於向popup發送消息的函數
+function sendMessageToPopup(message) {
+  if (popupPort) {
+    popupPort.postMessage(message);
+  }
+}
