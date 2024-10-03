@@ -73,6 +73,37 @@ var init = (tab) => {
     }
 
     document.getElementById('abortButton').addEventListener('click', abortOperation);
+
+    initTicketTable(response.ticketArray)
+    
+  })
+}
+
+function initTicketTable(ticketArray) {
+  var select = document.getElementById("tickets")
+
+  var defaultOption = document.createElement("option");
+  defaultOption.text = "     "
+  select.add(defaultOption);
+
+  if (ticketArray) {
+    console.log(ticketArray)
+    for (var i = 0; i < ticketArray.length; i++) {
+      var option = document.createElement("option");
+      option.text = ticketArray[i].price + "/" +  ticketArray[i].name
+      option.value = ticketArray[i].id
+      select.add(option);
+    }
+  } else {
+    var option = document.createElement("option");
+    option.text = "沒抓到資料，請重按一次"
+    select.add(option);
+  }
+
+  select.addEventListener("change", function() {
+    console.log("onchangeonchangeonchange")
+    var ticketIdElement = document.getElementById("ticket_id")
+    ticketIdElement.value = select.value
   })
 }
 

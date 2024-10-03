@@ -21,7 +21,20 @@ function onMessage(request, sender, sendResponse) {
 
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       console.log("getCsrfToken: " + csrfToken)
-      sendResponse({ csrfToken: csrfToken, eventId: eventId, questionExists: checkQuestionExists(), recaptchaExists: checkRecaptchaExists() })
+
+      var tickets = document.getElementsByClassName("display-table")
+			
+			var dataArray = []
+			for (var i = 0; i < tickets.length; i++) {
+				var t = tickets[i]
+				// console.log(t.id)
+				// console.log(t.getElementsByClassName("ticket-name")[0].innerText)
+				// console.log(t.getElementsByClassName("ticket-price")[0].innerText)
+
+				dataArray.push({id: t.id, name: t.getElementsByClassName("ticket-name")[0].innerText, price: t.getElementsByClassName("ticket-price")[0].innerText})
+			}
+
+      sendResponse({ csrfToken: csrfToken, eventId: eventId, questionExists: checkQuestionExists(), recaptchaExists: checkRecaptchaExists(), ticketArray: dataArray })
       break
   }
 }
