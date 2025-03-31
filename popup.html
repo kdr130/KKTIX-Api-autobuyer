@@ -98,6 +98,13 @@
     票券數量數量: <input type="text" id="ticket_count">
   </div>
   <br><br>
+
+<!-- 新增的重試間隔輸入欄位 -->
+  <div class="fontTitle">
+    重試間隔(毫秒): <input type="number" id="retry_interval" value="500" min="100" step="100">
+  </div>
+  <br><br>
+
   <form id="postForm">
     <label for="data">POST Data (JSON):</label>
     <textarea id="data" required

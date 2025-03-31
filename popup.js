@@ -1,7 +1,6 @@
 var csrfToken = ""
 var eventId = ""
 
-
 function customURLEncode(str) {
   return encodeURIComponent(str)
     .replace(/!/g, '%21')
@@ -11,7 +10,6 @@ function customURLEncode(str) {
     .replace(/\*/g, '%2A')
     .replace(/%20/g, '+');
 }
-
 
 document.getElementById('postForm').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -23,17 +21,20 @@ document.getElementById('postForm').addEventListener('submit', function (e) {
 
   const url = "https://queue.kktix.com/queue/" + eventId + "?authenticity_token=" + customURLEncode(csrfToken)
   const data = document.getElementById('data').value;
+  // 獲取 retry_interval 的值
+  const retryInterval = parseInt(document.getElementById('retry_interval').value) || 500;
 
   // 獲取當前標籤頁的URL
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const pageUrl = tabs[0].url;
 
-    // 發送消息到background script
+    // 發送消息到background script，包括 retryInterval
     chrome.runtime.sendMessage({
       action: "performRequests",
       url: url,
       data: data,
-      pageUrl: pageUrl
+      pageUrl: pageUrl,
+      retryInterval: retryInterval // 新增的重試間隔參數
     }, function (response) {
       console.log("response.getData : " + JSON.stringify(response.getData))
       console.log("response.error : " + JSON.stringify(response.error))
@@ -48,12 +49,18 @@ document.getElementById('postForm').addEventListener('submit', function (e) {
 
 document.addEventListener('DOMContentLoaded', function() {
   const textarea = document.getElementById('data');
+  const retryIntervalInput = document.getElementById('retry_interval');
   
   // 當頁面載入時，讀取儲存的內容
-  chrome.storage.local.get(['textareaContent'], function(result) {
-      if (result.textareaContent) {
-          textarea.value = result.textareaContent;
-      }
+  chrome.storage.local.get(['textareaContent', 'retryInterval'], function(result) {
+    if (result.textareaContent) {
+      textarea.value = result.textareaContent;
+    }
+    if (result.retryInterval) {
+      retryIntervalInput.value = result.retryInterval;
+    } else {
+      retryIntervalInput.value = 500; // 默認值
+    }
   });
   
   // 當內容改變時，儲存內容
@@ -62,8 +69,18 @@ document.addEventListener('DOMContentLoaded', function() {
           'textareaContent': textarea.value
       });
   });
-});
 
+  // 當 retry_interval 改變時，儲存內容
+  retryIntervalInput.addEventListener('input', function() {
+    const retryInterval = parseInt(this.value);
+    if (retryInterval < 100) {
+      this.value = 100;
+    }
+    chrome.storage.local.set({
+      'retryInterval': this.value
+    });
+  });
+});
 
 var init = (tab) => {
   var tabId = tab.id;
@@ -93,7 +110,6 @@ var init = (tab) => {
     document.getElementById('abortButton').addEventListener('click', abortOperation);
 
     initTicketTable(response.ticketArray)
-
   })
 }
 
@@ -139,40 +155,30 @@ function abortOperation() {
   });
 }
 
-
 chrome.tabs.getSelected(null, init)
-
 
 let backgroundPort;
 function connectToBackground() {
   backgroundPort = chrome.runtime.connect({ name: "popup" });
 
   backgroundPort.onMessage.addListener(function (message) {
-    // 處理來自background的消息
     console.log("Received message from background:", message);
-
-    // 根據消息類型更新UI
     if (message.type === "postUpdate") {
       updatePostStatus(message.data);
     } else if (message.type === "getUpdate") {
       updateGetStatus(message.data);
     }
-    // ... 處理其他類型的消息 ...
   });
 }
 
-// 在popup打開時連接到background
 document.addEventListener('DOMContentLoaded', connectToBackground);
 
-// 更新UI的函數
 function updatePostStatus(log) {
-  // 更新UI以顯示POST請求的狀態
   console.log("updatePostStatus: log: " + log)
   document.getElementById('result').innerText = log
 }
 
 function updateGetStatus(data) {
-  // 更新UI以顯示GET請求的狀態
   console.log("updateGetStatus: data: " + JSON.stringify(data))
 }
 
@@ -189,11 +195,16 @@ function addOnChangeListener() {
     updateJsonData()
   })
 
+  // 添加 retry_interval 的監聽器
+  document.getElementById("retry_interval").addEventListener("input", function () {
+    const retryInterval = parseInt(this.value);
+    if (retryInterval < 100) {
+      this.value = 100; // 確保最小值為100ms
+    }
+  });
 }
 
 function updateJsonData() {
-  // {"tickets":[{"id":785661,"quantity":1,"invitationCodes":[],"member_code":"#20240605164909367","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"摺痕","agreeTerm":true}
-
   var ticketFullId = document.getElementById("ticket_id").value
   var ticketId = ticketFullId.replace("ticket_", "")
   console.log("ticketId: " + ticketId)
@@ -201,13 +212,13 @@ function updateJsonData() {
   var ticketCount = document.getElementById("ticket_count").value
   console.log("ticketCount: " + ticketCount)
 
-  var membetCode = document.getElementById("member_code").value
-  console.log("membetCode: " + membetCode)
+  var memberCode = document.getElementById("member_code").value
+  console.log("memberCode: " + memberCode)
 
   var customCaptcha = document.getElementById("captcha_answer").value
   console.log("custom_captcha: " + customCaptcha)
 
-  document.getElementById('data').value = '{"tickets":[{"id":' + ticketId + ',"quantity":' + ticketCount + ',"invitationCodes":[],"member_code":"' + membetCode + '","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"' + customCaptcha + '","agreeTerm":true}'
+  document.getElementById('data').value = '{"tickets":[{"id":' + ticketId + ',"quantity":' + ticketCount + ',"invitationCodes":[],"member_code":"' + memberCode + '","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"' + customCaptcha + '","agreeTerm":true}'
 }
 
 addOnChangeListener()

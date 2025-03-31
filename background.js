@@ -44,6 +44,7 @@ function sendMsgToContentScript(request) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("request: " + JSON.stringify(request))
   if (request.action === "performRequests") {
+    const retryInterval = request.retryInterval || 500; // 使用傳入值或默認500ms
     shouldAbort = false;
     const { url, data, pageUrl } = request;
 
@@ -100,7 +101,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               return performGet(getUrl, cookieString).then(getData => ({ postData, getData }));
             } else if (postData && typeof postData === 'object' && 'result' in postData && (postData.result === 'event_not_yet_start' || postData.result === 'TICKET_SOLD_OUT')) {
               // Wait for a short time before retrying
-              return new Promise(resolve => setTimeout(resolve, 500))
+              return new Promise(resolve => setTimeout(resolve, retryInterval))
               .then(() => recursivePost(url, data, cookieString, attemptCount + 1));
             } else {
               throw new Error('No token found in the response. ' + JSON.stringify(postData));
@@ -123,7 +124,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return newGetData;
                   } else if ('result' in newGetData && newGetData.result === 'not_found') {
                     // Wait for a short time before retrying
-                    return new Promise(resolve => setTimeout(resolve, 500))
+                    return new Promise(resolve => setTimeout(resolve, retryInterval))
                       .then(() => recursiveGet(token, cookieString, retryCount + 1, maxRetries));
                   } else {
                     throw new Error('Unexpected response format');
