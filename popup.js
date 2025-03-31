@@ -46,6 +46,24 @@ document.getElementById('postForm').addEventListener('submit', function (e) {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('data');
+  
+  // 當頁面載入時，讀取儲存的內容
+  chrome.storage.local.get(['textareaContent'], function(result) {
+      if (result.textareaContent) {
+          textarea.value = result.textareaContent;
+      }
+  });
+  
+  // 當內容改變時，儲存內容
+  textarea.addEventListener('input', function() {
+      chrome.storage.local.set({
+          'textareaContent': textarea.value
+      });
+  });
+});
+
 
 var init = (tab) => {
   var tabId = tab.id;
