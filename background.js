@@ -16,6 +16,7 @@ function performPost(url, data, cookieString) {
 
 // 函數用於執行GET請求
 function performGet(url, cookieString) {
+  console.log(`performGet url: ${url}`)
   return fetch(url, {
     method: 'GET',
     headers: {
@@ -24,6 +25,7 @@ function performGet(url, cookieString) {
     credentials: 'include'
   })
     .then(response => {
+      console.log(`performGet response: ${JSON.stringify(response)}`)
       return response.json()
     });
 }
@@ -104,7 +106,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               return new Promise(resolve => setTimeout(resolve, retryInterval))
               .then(() => recursivePost(url, data, cookieString, attemptCount + 1));
             } else {
-              throw new Error('No token found in the response. ' + JSON.stringify(postData));
+              // throw new Error('No token found in the response. ' + JSON.stringify(postData));
+              console.log('No token found in the response. ' + JSON.stringify(postData))
+              return new Promise(resolve => setTimeout(resolve, retryInterval))
+              .then(() => recursivePost(url, data, cookieString, attemptCount + 1));
             }
           })
           .then(({ postData, getData }) => {
@@ -123,11 +128,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   if ('to_param' in newGetData) {
                     return newGetData;
                   } else if ('result' in newGetData && newGetData.result === 'not_found') {
+                    console.log("performGet is not_found recursiveGet!")
                     // Wait for a short time before retrying
                     return new Promise(resolve => setTimeout(resolve, retryInterval))
                       .then(() => recursiveGet(token, cookieString, retryCount + 1, maxRetries));
                   } else {
-                    throw new Error('Unexpected response format');
+                    console.log(`performGet: ${JSON.stringify(newGetData)} is Unexpected response format!`)
+                    recursivePost(url, data, cookieString);
+                    // throw new Error('Unexpected response format');
                   }
                 });
             }
