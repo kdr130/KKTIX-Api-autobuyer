@@ -62,8 +62,8 @@ document.getElementById("postForm").addEventListener("submit", function (e) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const textarea = document.getElementById("data");
   const retryIntervalInput = document.getElementById("retry_interval");
+  const textarea = document.getElementById("data");
 
   // 當頁面載入時，讀取儲存的內容
   chrome.storage.local.get(
@@ -82,9 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 當內容改變時，儲存內容
   textarea.addEventListener("input", function () {
-    chrome.storage.local.set({
-      textareaContent: textarea.value,
-    });
+    saveInputData();
   });
 
   // 當 retry_interval 改變時，儲存內容
@@ -263,6 +261,17 @@ function updateJsonData() {
     '","use_qualification_id":null}],"currency":"TWD","recaptcha":{},"custom_captcha":"' +
     customCaptcha +
     '","agreeTerm":true}';
+
+  saveInputData();
+}
+
+function saveInputData() {
+  console.log("saveInputData");
+  const textarea = document.getElementById("data");
+  console.log("textarea.value: " + textarea.value);
+  chrome.storage.local.set({
+    textareaContent: textarea.value,
+  });
 }
 
 addOnChangeListener();
