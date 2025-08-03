@@ -12,6 +12,7 @@ function customURLEncode(str) {
 }
 
 document.getElementById("postForm").addEventListener("submit", function (e) {
+  abortOperation();
   e.preventDefault();
 
   if (csrfToken == "") {
