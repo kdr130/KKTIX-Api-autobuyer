@@ -153,7 +153,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 token,
                 cookieString,
                 retryCount = 0,
-                maxRetries = 100
+                maxRetries = 1000000
               ) {
                 if (retryCount >= maxRetries) {
                   throw new Error(
