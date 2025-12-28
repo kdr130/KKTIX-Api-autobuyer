@@ -137,8 +137,13 @@ var init = (tab) => {
         .getElementById("token_go")
         .addEventListener("click", goToTokenPage);
 
+      document
+        .getElementById("param_go")
+        .addEventListener("click", goToParamPage);
+
       initTicketTable(response.ticketArray);
       showRecentToken();
+      showRecentParam();
     }
   );
 };
@@ -202,6 +207,9 @@ function connectToBackground() {
     } else if (message.type === "tokenUpdate") {
       console.log("tokenUpdate: token: " + message.data);
       updateTokenStatus(message.data);
+    } else if (message.type === "paramUpdate") {
+      console.log("paramUpdate: param: " + message.data);
+      updateParamStatus(message.data);
     }
   });
 }
@@ -249,6 +257,12 @@ function addOnChangeListener() {
     .getElementById("recent_token")
     .addEventListener("input", function () {
       saveRecentToken(this.value);
+    });
+
+  document
+    .getElementById("recent_param")
+    .addEventListener("input", function () {
+      saveRecentParam(this.value);
     });
 }
 
@@ -318,6 +332,65 @@ function goToTokenPage() {
   }
   const url = "https://queue.kktix.com/queue/token/" + token;
   window.open(url, "_blank");
+}
+
+function updateParamStatus(param) {
+  console.log("updateParamStatus: param: " + JSON.stringify(param));
+  document.getElementById("recent_param").value = param;
+  saveRecentParam(param);
+}
+
+function saveRecentParam(param) {
+  console.log("saveRecentParam param: " + param);
+  chrome.storage.local.set({
+    rectenParam: param,
+  });
+}
+
+function showRecentParam() {
+  chrome.storage.local.get(["rectenParam"], function (result) {
+    console.log("recent raram: " + result.rectenParam);
+    document.getElementById("recent_param").value = result.rectenParam;
+  });
+}
+
+// 到訂單畫面：[GET] https://kktix.com/events/2025leejongsukwithjustlikethisintaipei/registrations/149979176-f7a7a25e0e681ab29b2c24012008b369#/
+// 149979176-f7a7a25e0e681ab29b2c24012008b369 會是從 步驟2 的 response 裡面的 to_param 參數
+
+function goToParamPage() {
+  const param = document.getElementById("recent_param").value;
+  if (param == "") {
+    alert("最近一次 param 為空，請先取得 param");
+    return;
+  }
+
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    // tabs 是一個陣列，因為我們過濾了 active，所以取第一個
+    let currentTab = tabs[0];
+
+    if (currentTab) {
+      // console.log("目前的 URL 是: " + currentTab.url);
+
+      let currentUrl = currentTab.url;
+      // console.log("currentUrl: ", currentUrl);
+      const urlParts = currentUrl.split("/");
+      const eventIndex = urlParts.indexOf("events");
+      eventId =
+        eventIndex !== -1 && eventIndex + 1 < urlParts.length
+          ? urlParts[eventIndex + 1]
+          : null;
+      console.log("Event ID:", eventId);
+
+      // https://kktix.com/events/2025leejongsukwithjustlikethisintaipei/registrations/149979176-f7a7a25e0e681ab29b2c24012008b369#/
+      const url =
+        "https://kktix.com/events/" +
+        eventId +
+        "/registrations/" +
+        param +
+        "#/";
+      window.open(url, "_blank");
+    }
+  });
 }
 
 addOnChangeListener();

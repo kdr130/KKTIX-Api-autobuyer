@@ -172,6 +172,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const getUrl = `https://queue.kktix.com/queue/token/${token}`;
                 return performGet(getUrl, cookieString).then((newGetData) => {
                   if ("to_param" in newGetData) {
+                    sendMessageToPopup({
+                      type: "paramUpdate",
+                      data: newGetData["to_param"],
+                    });
+
                     return newGetData;
                   } else if (
                     "result" in newGetData &&
