@@ -1,4 +1,5 @@
 // background.js
+const tokenRequestInterval = 3000;
 
 // 函數用於執行POST請求
 function performPost(url, data, cookieString) {
@@ -175,7 +176,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     console.log("performGet is not_found recursiveGet!");
                     // Wait for a short time before retrying
                     return new Promise((resolve) =>
-                      setTimeout(resolve, retryInterval)
+                      setTimeout(resolve, tokenRequestInterval)
                     ).then(() =>
                       recursiveGet(
                         token,
