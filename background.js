@@ -117,6 +117,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 "token" in postData
               ) {
                 const token = postData.token;
+                sendMessageToPopup({
+                  type: "tokenUpdate",
+                  data: token,
+                });
                 // 執行GET請求
                 const getUrl = `https://queue.kktix.com/queue/token/${token}`;
                 return performGet(getUrl, cookieString).then((getData) => ({

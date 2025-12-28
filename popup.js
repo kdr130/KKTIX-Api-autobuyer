@@ -133,7 +133,12 @@ var init = (tab) => {
         .getElementById("abortButton")
         .addEventListener("click", abortOperation);
 
+      document
+        .getElementById("token_go")
+        .addEventListener("click", goToTokenPage);
+
       initTicketTable(response.ticketArray);
+      showRecentToken();
     }
   );
 };
@@ -194,6 +199,9 @@ function connectToBackground() {
       updatePostStatus(message.data);
     } else if (message.type === "getUpdate") {
       updateGetStatus(message.data);
+    } else if (message.type === "tokenUpdate") {
+      console.log("tokenUpdate: token: " + message.data);
+      updateTokenStatus(message.data);
     }
   });
 }
@@ -235,6 +243,13 @@ function addOnChangeListener() {
         this.value = 100; // 確保最小值為100ms
       }
     });
+
+  // token 變化時要儲存到 local storage
+  document
+    .getElementById("recent_token")
+    .addEventListener("input", function () {
+      saveRecentToken(this.value);
+    });
 }
 
 function updateJsonData() {
@@ -272,6 +287,37 @@ function saveInputData() {
   chrome.storage.local.set({
     textareaContent: textarea.value,
   });
+}
+
+function updateTokenStatus(token) {
+  console.log("updateTokenStatus: token: " + JSON.stringify(token));
+  document.getElementById("recent_token").value = token;
+  saveRecentToken(token);
+}
+
+function saveRecentToken(token) {
+  console.log("recent token: " + token);
+  chrome.storage.local.set({
+    rectenToken: token,
+  });
+}
+
+function showRecentToken() {
+  chrome.storage.local.get(["rectenToken"], function (result) {
+    console.log("recent token: " + result.rectenToken);
+    document.getElementById("recent_token").value = result.rectenToken;
+  });
+}
+
+// https://queue.kktix.com/queue/token/df557acb-4fe6-4e23-92c8-a1f4b8697b80
+function goToTokenPage() {
+  const token = document.getElementById("recent_token").value;
+  if (token == "") {
+    alert("最近一次 token 為空，請先取得 token");
+    return;
+  }
+  const url = "https://queue.kktix.com/queue/token/" + token;
+  window.open(url, "_blank");
 }
 
 addOnChangeListener();
